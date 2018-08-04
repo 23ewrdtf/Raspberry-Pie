@@ -54,6 +54,11 @@ bogus-priv
 address=/#/10.0.0.1
 
 
+nano /etc/dhcpcd.conf
+# Example static IP configuration:
+interface wlan0
+static routers=10.0.0.1
+static domain_name_servers=10.0.0.1
 
 
 
