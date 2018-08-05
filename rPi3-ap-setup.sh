@@ -114,18 +114,18 @@ echo "----------------------Starting up services and configuring to start at boo
 systemctl enable hostapd
 systemctl enable dnsmasq
 
-sudo service hostapd start
-sudo service dnsmasq start
+service hostapd start
+service dnsmasq start
 
-sudo update-rc.d dnsmasq defaults
-sudo update-rc.d hostapd defaults
+update-rc.d dnsmasq defaults
+update-rc.d hostapd defaults
 
 echo "----------------------Doing something to dhcpcd.sh----------------------"
 
-sudo wget -q https://gist.githubusercontent.com/Lewiscowles1986/390d4d423a08c4663c0ada0adfe04cdb/raw/5b41bc95d1d483b48e119db64e0603eefaec57ff/dhcpcd.sh -O /usr/lib/dhcpcd5/dhcpcd
+wget -q https://gist.githubusercontent.com/Lewiscowles1986/390d4d423a08c4663c0ada0adfe04cdb/raw/5b41bc95d1d483b48e119db64e0603eefaec57ff/dhcpcd.sh -O /usr/lib/dhcpcd5/dhcpcd
 
 echo "----------------------Permissions on dhcpcd----------------------"
 
-sudo chmod +x /usr/lib/dhcpcd5/dhcpcd
+chmod +x /usr/lib/dhcpcd5/dhcpcd
 
 echo "----------------------All done! Please reboot----------------------"
