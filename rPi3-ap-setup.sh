@@ -22,23 +22,23 @@ if [[ $# -eq 2 ]]; then
 	APSSID=$2
 fi
 
-echo "Removing old hostapd."
+echo "----------------------Removing old hostapd----------------------"
 
 apt-get remove --purge hostapd -yqq
 
-echo "Updating repositories."
+echo "----------------------Updating repositories----------------------"
 
 apt-get update -yqq
 
-echo "Upgrading packages, this might take a while."
+echo "----------------------Upgrading packages, this might take a while----------------------"
 
 apt-get upgrade -yqq
 
-echo "installing hostapd and dnsmasq."
+echo "----------------------Installing hostapd and dnsmasq----------------------"
 
 apt-get install hostapd dnsmasq -yqq
 
-echo "Writing to dnsmasq.conf"
+echo "----------------------Writing to dnsmasq.conf----------------------"
 
 cat > /etc/dnsmasq.conf <<EOF
 interface=wlan0
@@ -46,7 +46,7 @@ dhcp-range=10.0.0.2,10.0.0.5,255.255.255.0,12h
 address=/#/10.0.0.1
 EOF
 
-echo "Writing to hostapd.conf"
+echo "----------------------Writing to hostapd.conf----------------------"
 
 cat > /etc/hostapd/hostapd.conf <<EOF
 interface=wlan0
@@ -59,7 +59,7 @@ wmm_enabled=1
 ht_capab=[HT40][SHORT-GI-20][DSSS_CCK-40]
 EOF
 
-echo "Writing to interfaces"
+echo "----------------------Configuring interfaces----------------------"
 
 sed -i -- 's/allow-hotplug wlan0//g' /etc/network/interfaces
 sed -i -- 's/iface wlan0 inet manual//g' /etc/network/interfaces
@@ -81,7 +81,7 @@ EOF
 
 echo "denyinterfaces wlan0" >> /etc/dhcpcd.conf
 
-echo "Starting up services and configuring to start at boot"
+echo "----------------------Starting up services and configuring to start at boot----------------------"
 
 systemctl enable hostapd
 systemctl enable dnsmasq
@@ -92,4 +92,4 @@ sudo service dnsmasq start
 sudo update-rc.d dnsmasq defaults
 sudo update-rc.d hostapd defaults
 
-echo "All done! Please reboot"
+echo "----------------------All done! Please reboot----------------------"
