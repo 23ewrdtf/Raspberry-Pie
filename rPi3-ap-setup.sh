@@ -1,6 +1,5 @@
 #!/bin/bash
 #
-# This version uses September 2017 august stretch image, please use this image
 # From https://gist.github.com/Lewiscowles1986/fecd4de0b45b2029c390
 
 if [ "$EUID" -ne 0 ]
@@ -34,9 +33,17 @@ echo "----------------------Upgrading packages, this might take a while---------
 
 apt-get upgrade -yqq
 
-echo "----------------------Installing hostapd and dnsmasq----------------------"
+echo "----------------------Installing hostapd----------------------"
 
-apt-get install hostapd dnsmasq -yqq
+apt-get install hostapd -yqq
+
+echo "----------------------Installing dnsmasq----------------------"
+
+apt-get install dnsmasq -yqq
+
+echo "----------------------Installing lighttpd----------------------"
+
+apt-get install lighttpd -yqq
 
 echo "----------------------Writing to dnsmasq.conf----------------------"
 
