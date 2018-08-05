@@ -21,17 +21,17 @@ if [[ $# -eq 2 ]]; then
 	APSSID=$2
 fi
 
-echo "----------------------Removing old hostapd----------------------"
+# echo "----------------------Removing old hostapd----------------------"
 
-apt-get remove --purge hostapd -yqq
+# apt-get remove --purge hostapd -yqq
 
-echo "----------------------Updating repositories----------------------"
+# echo "----------------------Updating repositories----------------------"
 
-apt-get update -yqq
+# apt-get update -yqq
 
-echo "----------------------Upgrading packages, this might take a while----------------------"
+# echo "----------------------Upgrading packages, this might take a while----------------------"
 
-apt-get upgrade -yqq
+# apt-get upgrade -yqq
 
 echo "----------------------Installing hostapd----------------------"
 
@@ -48,10 +48,31 @@ apt-get install lighttpd -yqq
 echo "----------------------Writing to dnsmasq.conf----------------------"
 
 cat > /etc/dnsmasq.conf <<EOF
+bogus-priv
+server=/localnet/10.0.0.1
+local=/localnet/
+domain=localnet
+dhcp-option=3,10.0.0.1
+dhcp-option=6,10.0.0.1
+dhcp-authoritative
 interface=wlan0
 dhcp-range=10.0.0.2,10.0.0.5,255.255.255.0,12h
 address=/#/10.0.0.1
 EOF
+
+echo "----------------------Writing to hosts----------------------"
+
+cat > /etc/dnsmasq.conf <<EOF
+127.0.0.1	localhost 
+10.0.0.1	hotspot.localnet
+EOF
+
+echo "----------------------Writing to resolv.conf----------------------"
+
+cat > /run/dnsmasq/resolv.conf <<EOF
+nameserver 10.0.0.1
+EOF
+
 
 echo "----------------------Writing to hostapd.conf----------------------"
 
@@ -98,5 +119,13 @@ sudo service dnsmasq start
 
 sudo update-rc.d dnsmasq defaults
 sudo update-rc.d hostapd defaults
+
+echo "----------------------Doing something to dhcpcd.sh----------------------"
+
+sudo wget -q https://gist.githubusercontent.com/Lewiscowles1986/390d4d423a08c4663c0ada0adfe04cdb/raw/5b41bc95d1d483b48e119db64e0603eefaec57ff/dhcpcd.sh -O /usr/lib/dhcpcd5/dhcpcd
+
+echo "----------------------Permissions on dhcpcd----------------------"
+
+sudo chmod +x /usr/lib/dhcpcd5/dhcpcd
 
 echo "----------------------All done! Please reboot----------------------"
