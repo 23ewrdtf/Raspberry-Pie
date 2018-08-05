@@ -22,19 +22,19 @@ if [[ $# -eq 2 ]]; then
 	APSSID=$2
 fi
 
-echo "Removing old hostapd"
+echo "Removing old hostapd."
 
 apt-get remove --purge hostapd -yqq
 
-echo "Updating repositories"
+echo "Updating repositories."
 
 apt-get update -yqq
 
-echo "Upgrading pie"
+echo "Upgrading packages, this might take a while."
 
 apt-get upgrade -yqq
 
-echo "installing hostapd and dnsmasq"
+echo "installing hostapd and dnsmasq."
 
 apt-get install hostapd dnsmasq -yqq
 
