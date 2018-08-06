@@ -1,131 +1,203 @@
 #!/bin/bash
 #
 # From https://gist.github.com/Lewiscowles1986/fecd4de0b45b2029c390
+# https://andrewwippler.com/2016/03/11/wifi-captive-portal/
+# and other places.
 
 if [ "$EUID" -ne 0 ]
 	then echo "Must be root"
 	exit
 fi
 
-if [[ $# -lt 1 ]]; 
-	then echo "You need to pass a password!"
-	echo "Usage:"
-	echo "sudo $0 yourChosenPassword [apName]"
-	exit
-fi
-
-APPASS="$1"
-APSSID="rPi3"
-
-if [[ $# -eq 2 ]]; then
-	APSSID=$2
-fi
-
-# echo "----------------------Removing old hostapd----------------------"
-
-# apt-get remove --purge hostapd -yqq
-
-# echo "----------------------Updating repositories----------------------"
-
+# echo "┌─────────────────────┐"
+# echo "|Updating repositories|"
+# echo "└─────────────────────┘"
 # apt-get update -yqq
 
-# echo "----------------------Upgrading packages, this might take a while----------------------"
-
+# echo "┌───────────────────────────────────────────┐"
+# echo "|Upgrading packages, this might take a while|"
+# echo "└───────────────────────────────────────────┘"
 # apt-get upgrade -yqq
 
-echo "----------------------Installing hostapd----------------------"
-
+echo "┌──────────────────┐"
+echo "|Installing hostapd|"
+echo "└──────────────────┘"
 apt-get install hostapd -yqq
 
-echo "----------------------Installing dnsmasq----------------------"
+echo "┌──────────────────┐"
+echo "|Installing dnsmasq|"
+echo "└──────────────────┘"
+apt-get install dnsmasq -yqq		
 
-apt-get install dnsmasq -yqq
+echo "┌──────────────────────────────┐"
+echo "|Installing iptables-persistent|"
+echo "└──────────────────────────────┘"
+apt-get install iptables-persistent -yqq
 
-echo "----------------------Installing lighttpd----------------------"
+echo "┌────────────────────┐"
+echo "|Installing conntrack|"
+echo "└────────────────────┘"
+apt-get install conntrack -yqq
 
+echo "┌────────────────┐"
+echo "|Installing nginx|"
+echo "└────────────────┘"
+apt-get install nginx -yqq
+
+echo "┌───────────────────┐"
+echo "|Installing lighttpd|"
+echo "└───────────────────┘"
 apt-get install lighttpd -yqq
 
-echo "----------------------Writing to dnsmasq.conf----------------------"
+echo "┌────────────────────┐"
+echo "|Copying dnsmasq.conf|"
+echo "└────────────────────┘"
+wget -q https://raw.githubusercontent.com/tretos53/Captive-Portal/master/dnsmasq.conf -O /etc/dnsmasq.conf
 
-cat > /etc/dnsmasq.conf <<EOF
-bogus-priv
-server=/localnet/10.0.0.1
-local=/localnet/
-domain=localnet
-dhcp-option=3,10.0.0.1
-dhcp-option=6,10.0.0.1
-dhcp-authoritative
-interface=wlan0
-dhcp-range=10.0.0.2,10.0.0.5,255.255.255.0,12h
-address=/#/10.0.0.1
-EOF
+echo "┌──────────────────┐"
+echo "|Copying hosts file|"
+echo "└──────────────────┘"
+wget -q https://raw.githubusercontent.com/tretos53/Captive-Portal/master/hosts -O /etc/hosts
 
-echo "----------------------Writing to hosts----------------------"
+echo "┌───────────────────────┐"
+echo "|Copying interfaces file|"
+echo "└───────────────────────┘"
+wget -q https://github.com/tretos53/Captive-Portal/blob/master/interfaces -O /etc/network/interfaces
 
-cat > /etc/dnsmasq.conf <<EOF
-127.0.0.1	localhost 
-10.0.0.1	hotspot.localnet
-EOF
+echo "┌────────────────────┐"
+echo "|Copying hostapd.conf|"
+echo "└────────────────────┘"
+wget -q https://raw.githubusercontent.com/tretos53/Captive-Portal/master/hostapd.conf -O /etc/hostapd/hostapd.conf
 
-echo "----------------------Writing to resolv.conf----------------------"
+echo "┌───────────────────┐"
+echo "|Copying resolv.conf|"
+echo "└───────────────────┘"
+wget -q https://raw.githubusercontent.com/tretos53/Captive-Portal/master/resolv.conf -O /run/dnsmasq/resolv.conf
 
-cat > /run/dnsmasq/resolv.conf <<EOF
-nameserver 10.0.0.1
-EOF
-
-
-echo "----------------------Writing to hostapd.conf----------------------"
-
-cat > /etc/hostapd/hostapd.conf <<EOF
-interface=wlan0
-hw_mode=g
-channel=10
-auth_algs=1
-ssid=$APSSID
-ieee80211n=1
-wmm_enabled=1
-ht_capab=[HT40][SHORT-GI-20][DSSS_CCK-40]
-EOF
-
-echo "----------------------Configuring interfaces----------------------"
-
-sed -i -- 's/allow-hotplug wlan0//g' /etc/network/interfaces
-sed -i -- 's/iface wlan0 inet manual//g' /etc/network/interfaces
-sed -i -- 's/    wpa-conf \/etc\/wpa_supplicant\/wpa_supplicant.conf//g' /etc/network/interfaces
+echo "┌──────────────────┐"
+echo "|Configuring DAEMON|"
+echo "└──────────────────┘"
 sed -i -- 's/#DAEMON_CONF=""/DAEMON_CONF="\/etc\/hostapd\/hostapd.conf"/g' /etc/default/hostapd
 
-cat >> /etc/network/interfaces <<EOF
-# Added by rPi Access Point Setup
-allow-hotplug wlan0
-iface wlan0 inet static
-	address 10.0.0.1
-	netmask 255.255.255.0
-	network 10.0.0.0
-	broadcast 10.0.0.255
-auto eth0
-	allow-hotplug eth0
-	iface eth0 inet dhcp
-EOF
-
-echo "denyinterfaces wlan0" >> /etc/dhcpcd.conf
-
-echo "----------------------Starting up services and configuring to start at boot----------------------"
+echo "┌─────────────────────────────────────────┐"
+echo "|Starting and configuring Services at boot|"
+echo "└─────────────────────────────────────────┘"
 
 systemctl enable hostapd
 systemctl enable dnsmasq
-
 service hostapd start
 service dnsmasq start
-
 update-rc.d dnsmasq defaults
 update-rc.d hostapd defaults
 
 echo "----------------------Doing something to dhcpcd.sh----------------------"
-
 wget -q https://gist.githubusercontent.com/Lewiscowles1986/390d4d423a08c4663c0ada0adfe04cdb/raw/5b41bc95d1d483b48e119db64e0603eefaec57ff/dhcpcd.sh -O /usr/lib/dhcpcd5/dhcpcd
 
 echo "----------------------Permissions on dhcpcd----------------------"
+chmod +x /usr/lib/dhcpcd5/dhcpcd																			   
 
-chmod +x /usr/lib/dhcpcd5/dhcpcd
+echo "┌─────────────────────┐"
+echo "|Configuring IP Tables|"
+echo "└─────────────────────┘"
 
-echo "----------------------All done! Please reboot----------------------"
+echo "┌────────────────────────────────────────┐"
+echo "|Flushing all connections in the firewall|"
+echo "└────────────────────────────────────────┘"
+iptables -F
+
+echo "┌───────────────────────────────┐"
+echo "|Deleting all chains in iptables|"
+echo "└───────────────────────────────┘"
+iptables -X
+
+echo "┌────────────────┐"
+echo "|Setting up rules|"
+echo "└────────────────┘"
+iptables -t mangle -N wlan0_Trusted
+iptables -t mangle -N wlan0_Outgoing
+iptables -t mangle -N wlan0_Incoming
+iptables -t mangle -I PREROUTING 1 -i wlan0 -j wlan0_Outgoing
+iptables -t mangle -I PREROUTING 1 -i wlan0 -j wlan0_Trusted
+iptables -t mangle -I POSTROUTING 1 -o wlan0 -j wlan0_Incoming
+iptables -t nat -N wlan0_Outgoing
+iptables -t nat -N wlan0_Router
+iptables -t nat -N wlan0_Internet
+iptables -t nat -N wlan0_Global
+iptables -t nat -N wlan0_Unknown
+iptables -t nat -N wlan0_AuthServers
+iptables -t nat -N wlan0_temp
+iptables -t nat -A PREROUTING -i wlan0 -j wlan0_Outgoing
+iptables -t nat -A wlan0_Outgoing -d 192.168.24.1 -j wlan0_Router
+iptables -t nat -A wlan0_Router -j ACCEPT
+iptables -t nat -A wlan0_Outgoing -j wlan0_Internet
+iptables -t nat -A wlan0_Internet -m mark --mark 0x2 -j ACCEPT
+iptables -t nat -A wlan0_Internet -j wlan0_Unknown
+iptables -t nat -A wlan0_Unknown -j wlan0_AuthServers
+iptables -t nat -A wlan0_Unknown -j wlan0_Global
+iptables -t nat -A wlan0_Unknown -j wlan0_temp
+
+echo "┌───────────────────────────────────────────┐"
+echo "|Forwarding new requests to this destination|"
+echo "└───────────────────────────────────────────┘"
+iptables -t nat -A wlan0_Unknown -p tcp --dport 80 -j DNAT --to-destination 192.168.24.1
+iptables -t filter -N wlan0_Internet
+iptables -t filter -N wlan0_AuthServers
+iptables -t filter -N wlan0_Global
+iptables -t filter -N wlan0_temp
+iptables -t filter -N wlan0_Known
+iptables -t filter -N wlan0_Unknown
+iptables -t filter -I FORWARD -i wlan0 -j wlan0_Internet
+iptables -t filter -A wlan0_Internet -m state --state INVALID -j DROP
+iptables -t filter -A wlan0_Internet -o eth0 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+iptables -t filter -A wlan0_Internet -j wlan0_AuthServers
+iptables -t filter -A wlan0_AuthServers -d 192.168.24.1 -j ACCEPT
+iptables -t filter -A wlan0_Internet -j wlan0_Global
+
+echo "┌───────────────────────────────────────────────────────┐"
+echo "|Allowing unrestricted access to packets marked with 0x2|"
+echo "└───────────────────────────────────────────────────────┘"
+iptables -t filter -A wlan0_Internet -m mark --mark 0x2 -j wlan0_Known
+iptables -t filter -A wlan0_Known -d 0.0.0.0/0 -j ACCEPT
+iptables -t filter -A wlan0_Internet -j wlan0_Unknown
+
+echo "┌───────────────────────────────────────────────────────────────────────────────────────────┐"
+echo "|Allowing access to DNS and DHCP. This helps power users who have set their own DNS servers.|"
+echo "└───────────────────────────────────────────────────────────────────────────────────────────┘"
+iptables -t filter -A wlan0_Unknown -d 0.0.0.0/0 -p udp --dport 53 -j ACCEPT
+iptables -t filter -A wlan0_Unknown -d 0.0.0.0/0 -p tcp --dport 53 -j ACCEPT
+iptables -t filter -A wlan0_Unknown -d 0.0.0.0/0 -p udp --dport 67 -j ACCEPT
+iptables -t filter -A wlan0_Unknown -d 0.0.0.0/0 -p tcp --dport 67 -j ACCEPT
+iptables -t filter -A wlan0_Unknown -j REJECT --reject-with icmp-port-unreachable
+
+echo "┌────────────────┐"
+echo "|Saving iptables.|"
+echo "└────────────────┘"
+iptables-save > /etc/iptables/rules.v4
+
+echo "┌──────────────────────────────┐"
+echo "|Making the HTML Document Root.|"
+echo "└──────────────────────────────┘"
+mkdir /usr/share/nginx/html/portal
+useradd nginx
+chown nginx:www-data /usr/share/nginx/html/portal
+chmod 755 /usr/share/nginx/html/portal
+
+echo "┌────────────────────┐"
+echo "|Copying hotspot.conf|"
+echo "└────────────────────┘"
+wget -q https://raw.githubusercontent.com/tretos53/Captive-Portal/master/nginx -O /etc/nginx/sites-available/hotspot.conf
+
+echo "┌──────────────────┐"
+echo "|Copying index.html|"
+echo "└──────────────────┘"
+wget -q https://raw.githubusercontent.com/tretos53/Captive-Portal/master/index.html -O /usr/share/nginx/html/portal/index.html
+
+echo "┌─────────────────────────────────────┐"
+echo "|Enabling the website and reload nginx|"
+echo "└─────────────────────────────────────┘"
+ln -s /etc/nginx/sites-available/hotspot.conf /etc/nginx/sites-enabled/hotspot.conf
+systemctl reload nginx
+
+echo "┌───────────────────────────────────┐"
+echo "|Done, connect to the wifi and test.|"
+echo "└───────────────────────────────────┘"
