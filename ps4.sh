@@ -36,20 +36,20 @@ else:
     print("Not a DS4")
  
  
-Motor1PWM  = 1 # gpio pin 12 = wiringpi no. 1 (BCM 18)
-Motor1AIN1 = 4 # gpio pin 16 = wiringpi no. 4 (BCM 23)
-Motor1AIN2 = 5 # gpio pin 18 = wiringpi no. 5 (BCM 24)
-MotorStandby = 6 # gpio pin 22 = wiringpi no. 6 (BCM 25)
-Motor2PWM = 23 # gpio pin 33 = wiringpi no. 23 (BCM 13)
-Motor2BIN1 = 21 # gpio pin 29 = wiringpi no. 21 (BCM 5)
-Motor2BIN2 = 22 # gpio pin 31 = wiringpi no. 22 (BCM 6)
+Motor1PWM  = 4
+Motor1AIN1 = 3
+Motor1AIN2 = 2
+#MotorStandby = 6 # gpio pin 22 = wiringpi no. 6 (BCM 25)
+Motor2PWM = 23
+Motor2BIN1 = 7
+Motor2BIN2 = 0
  
 # Initialize PWM output
 wiringpi.wiringPiSetup()
 wiringpi.pinMode(Motor1PWM, 2)     # PWM mode
 wiringpi.pinMode(Motor1AIN1, 1) #Digital out mode
 wiringpi.pinMode(Motor1AIN2, 1) #Digital out mode
-wiringpi.pinMode(MotorStandby, 1) #Ditial out mode
+#wiringpi.pinMode(MotorStandby, 1) #Ditial out mode
  
 wiringpi.pinMode(Motor2PWM, 2)     # PWM mode
 wiringpi.pinMode(Motor2BIN1, 1)    #Digital out mode
@@ -62,7 +62,7 @@ wiringpi.digitalWrite(Motor1AIN1, 1) #forward mode
 wiringpi.digitalWrite(Motor1AIN2, 0) #forward mode
 wiringpi.digitalWrite(Motor2BIN1, 1)
 wiringpi.digitalWrite(Motor2BIN2, 0)
-wiringpi.digitalWrite(MotorStandby, 1) #enabled
+#wiringpi.digitalWrite(MotorStandby, 1) #enabled
  
  
 # Set Motor Speed
