@@ -73,6 +73,13 @@ def motorspeed(speed1, speed2):
 while True:
     pygame.event.get()
     rt = joy.get_axis(5)
+    #0 left stick
+    #1 left stick
+    #2 lt
+    #3 right stick right
+    #4 right stick down
+    #5 rt
+    #6 
     lt = joy.get_axis(2)
     print(rt)
     print(lt)
