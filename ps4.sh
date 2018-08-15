@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Copied and modified from https://www.instructables.com/id/Remote-Raspberry-Pi-Robot-PS3-Controller-Fablab-Ne/
-# Tested on 
+# Tested on https://www.hackster.io/tretos/learning-and-building-a-raspberry-pie-robot-290ac1
 
 import pygame
 import time
