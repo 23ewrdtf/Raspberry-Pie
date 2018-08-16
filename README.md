@@ -5,15 +5,17 @@
 Create wpa_supplicant.conf file on boot partition
 
 ```
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
 country=GB
-ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev update_config=1
+
 network={
-       ssid="YourNetworkSSID"
-       psk="Your Network's Passphrase"
-       key_mgmt=WPA-PSK
-    }
+        ssid="SSID"
+        psk="Password not encrypted"
+        key_mgmt=WPA-PSK
+}
 ```
 
 ### Setting up a ssh on first boot
 
-Create ssh file on boot partition
+Create an empty file called ssh on boot partition
