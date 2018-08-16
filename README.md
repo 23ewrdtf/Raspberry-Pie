@@ -2,7 +2,7 @@
 
 ### Setting up a wifi on first boot
 
-Create wpa_supplicant.conf file on boot partition
+Create wpa_supplicant.conf file on boot partition. I tested many config files but this one acctually works.
 
 ```
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
